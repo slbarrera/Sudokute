@@ -1,9 +1,8 @@
-import pygame
-import numpy as np
+import numpy
 import random
 
 
-def solve_puzzle(puzzle):
+def generate_filled_puzzle(puzzle):
     """
     :param puzzle - 2D array of a sudoku puzzle:
     :return boolean - boolean indicating if puzzle is solvable:
@@ -19,17 +18,55 @@ def solve_puzzle(puzzle):
 
     # Goes though all possible numbers 1-9 and checks to see if it works
     # in that spot
-    for num in range(1, 10):
+    shuffled_numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    random.shuffle(shuffled_numbers)
+    for num in shuffled_numbers:
         if check_valid(puzzle, num, empty_space):
             puzzle[row][col] = num
 
             # Recursive call to check the next empty spot in the puzzle
-            if solve_puzzle(puzzle):
+            if generate_filled_puzzle(puzzle):
                 return True
 
             # if the guess does not work, we backtrack to last number
             puzzle[row][col] = 0
+    return False
 
+
+def solve_puzzle(puzzle):
+    """
+    :param puzzle - 2D array of a sudoku puzzle:
+    :return boolean - boolean indicating if puzzle is solvable:
+    """
+
+    # Finds the first instance of an empty space in the puzzle
+    empty_space = find_empty(puzzle)
+    # print("1")
+
+    if not empty_space:
+        # print("2")
+        return True
+    else:
+        # print("3")
+        row, col = empty_space
+
+    # Goes though all possible numbers 1-9 and checks to see if it works
+    # in that spot
+    for num in range(1, 10):
+        # print("4")
+        if check_valid(puzzle, num, empty_space):
+            # print("5")
+            puzzle[row][col] = num
+
+            # Recursive call to check the next empty spot in the puzzle
+            if solve_puzzle(puzzle):
+                # print("6")
+                return True
+
+            # if the guess does not work, we backtrack to last number
+            # print("7")
+            puzzle[row][col] = 0
+    # print("8")
     return False
 
 
@@ -41,7 +78,7 @@ def find_empty(puzzle):
     for i in range(len(puzzle)):
         for j in range(len(puzzle[0])):
             if puzzle[i][j] == 0:
-                return (i, j)
+                return i, j
     return None
 
 
@@ -60,6 +97,7 @@ def check_valid(puzzle, num, position):
 
 def check_row(puzzle, num, position):
     """
+     :param num:
      :param puzzle - 2D array of a sudoku puzzle:
      :param num - a number 1-9 that is the current guess at given position:
      :param position - a tuple of the current empty block:
@@ -124,3 +162,11 @@ def print_puzzle(puzzle):
                 print(puzzle[i][j])
             else:
                 print(str(puzzle[i][j]) + " ", end="")
+
+
+test_randomness = {}
+for i in range(20):
+    solvable_puzzle = numpy.zeros((9, 9), dtype=int).tolist()
+    generate_filled_puzzle(solvable_puzzle)
+    print_puzzle(solvable_puzzle)
+    print()
