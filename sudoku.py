@@ -2,107 +2,125 @@ import pygame
 import numpy as np
 import random
 
-def create_board():
-    board = np.zeros((9, 9))
-    board = board.tolist()
 
-    rand_i = random.randint(0, 8)
-    rand_j = random.randint(0, 8)
-    rand_num = random.randint(1, 10)
+def solve_puzzle(puzzle):
+    """
+    :param puzzle - 2D array of a sudoku puzzle:
+    :return boolean - boolean indicating if puzzle is solvable:
+    """
 
-base  = 3
-side  = base*base
-
-# pattern for a baseline valid solution
-def pattern(r,c): return (base*(r%base)+r//base+c)%side
-
-# randomize rows, columns and numbers (of valid base pattern)
-from random import sample
-def shuffle(s): return sample(s,len(s))
-rBase = range(base)
-rows  = [ g*base + r for g in shuffle(rBase) for r in shuffle(rBase) ]
-cols  = [ g*base + c for g in shuffle(rBase) for c in shuffle(rBase) ]
-nums  = shuffle(range(1,base*base+1))
-
-# produce board using randomized baseline pattern
-board = [ [nums[pattern(r,c)] for c in cols] for r in rows ]
-
-squares = side*side
-empties = squares * 3//4
-for p in sample(range(squares),empties):
-    board[p//side][p%side] = 0
-
-numSize = len(str(side))
-for line in board: print("["+"  ".join(f"{n or '.':{numSize}}" for n in line)+"]")
-
-
-def solve_board(board):
-    empty_space = find_empty(board)
+    # Finds the first instance of an empty space in the puzzle
+    empty_space = find_empty(puzzle)
 
     if not empty_space:
         return True
     else:
         row, col = empty_space
 
+    # Goes though all possible numbers 1-9 and checks to see if it works
+    # in that spot
     for num in range(1, 10):
-        if check_valid(board, num, empty_space):
-            board[row][col] = num
+        if check_valid(puzzle, num, empty_space):
+            puzzle[row][col] = num
 
-            if solve_board(board):
+            # Recursive call to check the next empty spot in the puzzle
+            if solve_puzzle(puzzle):
                 return True
 
-            board[row][col] = 0
+            # if the guess does not work, we backtrack to last number
+            puzzle[row][col] = 0
 
     return False
 
 
-def find_empty(board):
-    for i in range(len(board)):
-        for j in range(len(board[0])):
-            if board[i][j] == 0:
+def find_empty(puzzle):
+    """
+    :param puzzle - 2D array of a sudoku puzzle:
+    :return tuple - the location of the first empty spot in the given puzzle:
+    """
+    for i in range(len(puzzle)):
+        for j in range(len(puzzle[0])):
+            if puzzle[i][j] == 0:
                 return (i, j)
     return None
 
 
-def check_valid(board, num, position):
-    return check_col(board, num, position) and check_row(board, num, position) \
-           and check_square(board, num, position)
+def check_valid(puzzle, num, position):
+    """
+    :param puzzle - 2D array of a sudoku puzzle:
+    :param num - a number 1-9 that is the current guess at given position:
+    :param position - a tuple of the current empty space being checked:
+    :return boolean - :
+    """
+    # calls helper functions and returns True if num works in given position
+    return check_col(puzzle, num, position) and \
+           check_row(puzzle, num, position) and \
+           check_square(puzzle, num, position)
 
 
-def check_row(board, num, position):
-    for j in range(len(board[0])):
-        if (board[position[0]][j] == num) and (j != position[1]):
+def check_row(puzzle, num, position):
+    """
+     :param puzzle - 2D array of a sudoku puzzle:
+     :param num - a number 1-9 that is the current guess at given position:
+     :param position - a tuple of the current empty block:
+     :return boolean - returns True if num is valid in the given position:
+     """
+
+    # Checks to see if num is already in the given row
+    for j in range(len(puzzle[0])):
+        if (puzzle[position[0]][j] == num) and (j != position[1]):
             return False
     return True
 
 
-def check_col(board, num, position):
-    for i in range(len(board)):
-        if (board[i][position[1]] == num) and (i != position[0]):
+def check_col(puzzle, num, position):
+    """
+     :param puzzle - 2D array of a sudoku puzzle:
+     :param num - a number 1-9 that is the current guess at given position:
+     :param position - a tuple of the current empty block:
+     :return boolean - returns True if num is valid in the given position:
+     """
+
+    # Checks to see if num is already in the given column
+    for i in range(len(puzzle)):
+        if (puzzle[i][position[1]] == num) and (i != position[0]):
             return False
     return True
 
 
-def check_square(board, num, position):
+def check_square(puzzle, num, position):
+    """
+     :param puzzle - 2D array of a sudoku puzzle:
+     :param num - a number 1-9 that is the current guess at given position:
+     :param position - a tuple of the current empty block:
+     :return boolean - returns True if num is valid in the given position:
+     """
+
+    # Checks to see if num is already in the given square
     square_x = (position[1] // 3) * 3
     square_y = (position[0] // 3) * 3
 
     for i in range(square_y, square_y + 3):
         for j in range(square_x, square_x + 3):
-            if (board[i][j] == num) and ((i, j) != position):
+            if (puzzle[i][j] == num) and ((i, j) != position):
                 return False
     return True
 
 
-def print_board(board):
-    for i in range(len(board)):
+def print_puzzle(puzzle):
+    """
+    :param puzzle - 2D array of a sudoku puzzle:
+    :return None:
+    """
+
+    # Prints out the given sudoku puzzle
+    for i in range(len(puzzle)):
         if ((i % 3) == 0) and (i != 0):
             print("- - - - - - - - - - - - - - -")
-        for j in range(len(board[0])):
+        for j in range(len(puzzle[0])):
             if ((j % 3) == 0) and (j != 0):
                 print(" | ", end="")
             if j == 8:
-                print(board[i][j])
+                print(puzzle[i][j])
             else:
-                print(str(board[i][j]) + " ", end="")
-
+                print(str(puzzle[i][j]) + " ", end="")
