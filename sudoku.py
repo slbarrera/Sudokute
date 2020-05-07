@@ -1,5 +1,12 @@
 import numpy
 import random
+import requests
+from bs4 import BeautifulSoup
+
+
+def create_sudoku_puzzle():
+    new_puzzle = numpy.zeros((9, 9), dtype=int).tolist()
+    generate_filled_puzzle(new_puzzle)
 
 
 def generate_filled_puzzle(puzzle):
@@ -33,6 +40,22 @@ def generate_filled_puzzle(puzzle):
     return False
 
 
+def get_number_of_solutions(puzzle):
+    temp_puzzle = numpy.array(puzzle).flatten()
+    string = ''.join(str(e) for e in temp_puzzle).replace("0", ".")
+
+    url = "https://www.thonky.com/sudoku/solution-count?puzzle=" + string
+    print(url)
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    results = soup.find('strong')
+    get_num = results.get_text().split()
+
+    for elem in get_num:
+        if elem.isdigit():
+            return int(elem)
+
+
 def solve_puzzle(puzzle):
     """
     :param puzzle - 2D array of a sudoku puzzle:
@@ -41,32 +64,24 @@ def solve_puzzle(puzzle):
 
     # Finds the first instance of an empty space in the puzzle
     empty_space = find_empty(puzzle)
-    # print("1")
 
     if not empty_space:
-        # print("2")
         return True
     else:
-        # print("3")
         row, col = empty_space
 
     # Goes though all possible numbers 1-9 and checks to see if it works
     # in that spot
     for num in range(1, 10):
-        # print("4")
         if check_valid(puzzle, num, empty_space):
-            # print("5")
             puzzle[row][col] = num
 
             # Recursive call to check the next empty spot in the puzzle
             if solve_puzzle(puzzle):
-                # print("6")
                 return True
 
             # if the guess does not work, we backtrack to last number
-            # print("7")
             puzzle[row][col] = 0
-    # print("8")
     return False
 
 
@@ -164,9 +179,8 @@ def print_puzzle(puzzle):
                 print(str(puzzle[i][j]) + " ", end="")
 
 
-test_randomness = {}
-for i in range(20):
-    solvable_puzzle = numpy.zeros((9, 9), dtype=int).tolist()
-    generate_filled_puzzle(solvable_puzzle)
-    print_puzzle(solvable_puzzle)
-    print()
+def main():
+
+
+if __name__ == "__main__":
+    main()
